@@ -121,15 +121,15 @@ pip install -r requirements.txt
 alembic upgrade head
 
 # 초기 데이터 추가 (기본 계정과목)
-python -m app.seed_accounts
+python3 -m app.seed_accounts
 
 # (선택) 샘플 데이터 추가 (테스트용 분개 데이터)
-python -m app.seed_sample_data
-
+python3 -m app.seed_sample_data
+```
+```
 # 개발 서버 실행 (포트 8000)
 uvicorn app.main:app --reload
 ```
-
 
 ### 2-1. 환경변수 설정
 
