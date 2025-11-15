@@ -25,33 +25,33 @@
 ## 주요 기능
 
 ### 1. 대시보드
-![대시보드](assets/dashboard.JPG)
+![대시보드](https://raw.githubusercontent.com/SunshineMoonGit/mini-balance/main/assets/dashboard.png)
 - 회계 현황 요약
 - 주요 지표 시각화
 - 최근 거래 내역
   
 ### 2. 분개 입력
-![분개 입력](assets/journal.JPG)
-![분개 상세](assets/journal-1.JPG)
+![분개 입력](https://raw.githubusercontent.com/SunshineMoonGit/mini-balance/main/assets/journal.png)
+![분개 상세](https://raw.githubusercontent.com/SunshineMoonGit/mini-balance/main/assets/journal-1.png)
 - 복식부기 원칙 준수 (차변=대변 검증)
 - 날짜별 분개 조회 및 관리
 - Soft delete 방식으로 안전한 데이터 관리
 
 ### 3. 총계정원장
-![총계정원장](assets/general-ledger.JPG)
+![총계정원장](https://raw.githubusercontent.com/SunshineMoonGit/mini-balance/main/assets/general-ledger.png)
 - 계정별 거래 내역 조회
 - 기간별 필터링
 - 상세 거래 내역 확인
 
 ### 4. 계정과목
-![계정과목](assets/accounts.JPG)
+![계정과목](https://raw.githubusercontent.com/SunshineMoonGit/mini-balance/main/assets/accounts.png)
+![계정과목 상세](https://raw.githubusercontent.com/SunshineMoonGit/mini-balance/main/assets/accounts-1.png)
 - 자산, 부채, 자본, 수익, 비용 계정 CRUD
 - 계정별 잔액 조회 (기초/기말 잔액)
 - 활성/비활성 계정 구분
 
 ### 5. 시산표
-![시산표](assets/trial-balance.JPG)
-![계정과목 상세](assets/accounts-1.JPG)
+![시산표](https://raw.githubusercontent.com/SunshineMoonGit/mini-balance/main/assets/trial-balance.png)
 - 기간별 시산표 조회
 - 기초/기중/기말 잔액 계산
 - PDF 내보내기 기능
