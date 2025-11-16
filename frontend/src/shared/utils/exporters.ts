@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+import html2pdf from "html2pdf.js";
 
 import { formatCurrency } from "./formatNumber";
 import type { JournalEntry } from "../../features/journal/types/domain";
@@ -27,28 +27,6 @@ const downloadCsv = ({ filename, rows }: DownloadOptions) => {
   URL.revokeObjectURL(link.href);
 };
 
-const downloadPdf = ({ filename, rows, title }: { filename: string; rows: string[]; title: string }) => {
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const margin = 40;
-  let cursorY = margin;
-
-  doc.setFontSize(14);
-  doc.text(title, margin, cursorY);
-  cursorY += 28;
-  doc.setFontSize(11);
-
-  rows.forEach((line) => {
-    const lineText = line.replace(/\t/g, "    ");
-    doc.text(lineText, margin, cursorY, { maxWidth: 520 });
-    cursorY += 18;
-    if (cursorY > doc.internal.pageSize.height - margin) {
-      doc.addPage();
-      cursorY = margin;
-    }
-  });
-
-  doc.save(filename);
-};
 
 export const downloadJournalEntriesCsv = (
   entries: JournalEntry[],
@@ -87,22 +65,64 @@ export const downloadJournalEntriesPdf = (
     return;
   }
 
-  const rows: string[] = [];
+  // HTML 콘텐츠 생성
+  const htmlContent = document.createElement('div');
+  htmlContent.style.padding = '20px';
+  htmlContent.style.fontFamily = 'sans-serif';
+
+  // 제목
+  const title = document.createElement('h1');
+  title.textContent = '분개 내역';
+  title.style.fontSize = '24px';
+  title.style.marginBottom = '20px';
+  title.style.borderBottom = '2px solid #333';
+  title.style.paddingBottom = '10px';
+  htmlContent.appendChild(title);
+
+  // 각 전표 항목
   entries.forEach((entry) => {
     const entryDate = entry.postedAt?.split("T")[0] ?? "-";
-    rows.push(`전표 #${entry.id} · ${entryDate} · ${entry.description ?? "설명 없음"}`);
+
+    // 전표 헤더
+    const entryHeader = document.createElement('div');
+    entryHeader.style.marginTop = '15px';
+    entryHeader.style.marginBottom = '10px';
+    entryHeader.style.fontSize = '14px';
+    entryHeader.style.fontWeight = 'bold';
+    entryHeader.style.color = '#333';
+    entryHeader.textContent = `전표 #${entry.id} · ${entryDate} · ${entry.description ?? "설명 없음"}`;
+    htmlContent.appendChild(entryHeader);
+
+    // 전표 라인
     entry.lines.forEach((line: JournalEntry["lines"][number]) => {
       const accountLabel = accountLookup[line.accountId] ?? `계정 #${line.accountId}`;
-      rows.push(`  ${accountLabel} · 차변 ${formatCurrency(line.debit)} · 대변 ${formatCurrency(line.credit)}`);
+      const lineDev = document.createElement('div');
+      lineDev.style.marginLeft = '20px';
+      lineDev.style.fontSize = '12px';
+      lineDev.style.marginBottom = '5px';
+      lineDev.textContent = `${accountLabel} · 차변 ${formatCurrency(line.debit)} · 대변 ${formatCurrency(line.credit)}`;
+      htmlContent.appendChild(lineDev);
     });
-    rows.push("-");
+
+    // 구분선
+    const separator = document.createElement('hr');
+    separator.style.margin = '10px 0';
+    separator.style.border = 'none';
+    separator.style.borderTop = '1px solid #ddd';
+    htmlContent.appendChild(separator);
   });
 
-  downloadPdf({
+  // html2pdf 옵션
+  const options = {
+    margin: 10,
     filename: `journal-entries-${Date.now()}.pdf`,
-    rows,
-    title: "분개 내역",
-  });
+    image: { type: 'jpeg' as const, quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+  };
+
+  // PDF 생성 및 다운로드
+  html2pdf().set(options).from(htmlContent).save();
 };
 
 export const downloadTrialBalanceCsv = (lines: TrialBalanceLine[]) => {
@@ -135,4 +155,102 @@ export const downloadTrialBalanceCsv = (lines: TrialBalanceLine[]) => {
   });
 
   downloadCsv({ filename: `trial-balance-${Date.now()}.csv`, rows });
+};
+
+export const downloadTrialBalancePdf = (lines: TrialBalanceLine[]) => {
+  if (lines.length === 0) {
+    return;
+  }
+
+  const TYPE_LABELS: Record<string, string> = {
+    ASSET: "자산",
+    LIABILITY: "부채",
+    EQUITY: "자본",
+    REVENUE: "수익",
+    EXPENSE: "비용",
+  };
+
+  const directionLabel = (direction: string) =>
+    direction === "DEBIT" ? "차변" : "대변";
+
+  // HTML 콘텐츠 생성
+  const htmlContent = document.createElement('div');
+  htmlContent.style.padding = '20px';
+  htmlContent.style.fontFamily = 'sans-serif';
+
+  // 제목
+  const title = document.createElement('h1');
+  title.textContent = '시산표';
+  title.style.fontSize = '24px';
+  title.style.marginBottom = '20px';
+  title.style.borderBottom = '2px solid #333';
+  title.style.paddingBottom = '10px';
+  htmlContent.appendChild(title);
+
+  // 테이블 생성
+  const table = document.createElement('table');
+  table.style.width = '100%';
+  table.style.borderCollapse = 'collapse';
+  table.style.fontSize = '11px';
+
+  // 테이블 헤더
+  const thead = document.createElement('thead');
+  thead.innerHTML = `
+    <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+      <th style="padding: 8px; text-align: left; font-weight: 600;">코드</th>
+      <th style="padding: 8px; text-align: left; font-weight: 600;">계정</th>
+      <th style="padding: 8px; text-align: left; font-weight: 600;">분류</th>
+      <th style="padding: 8px; text-align: right; font-weight: 600;">기초 잔액</th>
+      <th style="padding: 8px; text-align: right; font-weight: 600;">차변 합계</th>
+      <th style="padding: 8px; text-align: right; font-weight: 600;">대변 합계</th>
+      <th style="padding: 8px; text-align: right; font-weight: 600;">기말 잔액</th>
+    </tr>
+  `;
+  table.appendChild(thead);
+
+  // 테이블 바디
+  const tbody = document.createElement('tbody');
+  lines.forEach((line, index) => {
+    const row = document.createElement('tr');
+    row.style.borderBottom = '1px solid #e2e8f0';
+    if (index % 2 === 1) {
+      row.style.backgroundColor = '#f8fafc';
+    }
+
+    row.innerHTML = `
+      <td style="padding: 8px;">${line.accountCode}</td>
+      <td style="padding: 8px; font-weight: 600;">${line.accountName}</td>
+      <td style="padding: 8px;">${TYPE_LABELS[line.type] ?? line.type}</td>
+      <td style="padding: 8px; text-align: right;">
+        ${formatCurrency(line.openingBalance.amount)}<br/>
+        <span style="font-size: 9px; color: #94a3b8;">${directionLabel(line.openingBalance.direction)}</span>
+      </td>
+      <td style="padding: 8px; text-align: right; color: ${line.totalDebit === 0 ? '#64748b' : '#059669'};">
+        ${formatCurrency(line.totalDebit)}
+      </td>
+      <td style="padding: 8px; text-align: right; color: ${line.totalCredit === 0 ? '#64748b' : '#dc2626'};">
+        ${formatCurrency(line.totalCredit)}
+      </td>
+      <td style="padding: 8px; text-align: right; font-weight: 600;">
+        ${formatCurrency(line.endingBalance.amount)}<br/>
+        <span style="font-size: 9px; color: #94a3b8;">${directionLabel(line.endingBalance.direction)}</span>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+  table.appendChild(tbody);
+
+  htmlContent.appendChild(table);
+
+  // html2pdf 옵션
+  const options = {
+    margin: 10,
+    filename: `trial-balance-${Date.now()}.pdf`,
+    image: { type: 'jpeg' as const, quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const }
+  };
+
+  // PDF 생성 및 다운로드
+  html2pdf().set(options).from(htmlContent).save();
 };

@@ -4,8 +4,7 @@ import { useTrialBalance } from "../../features/trialBalance/hooks/useTrialBalan
 import Skeleton from "../../shared/components/Feedback/Skeleton";
 import { toastService } from "../../shared/components/toast/toastService";
 import { formatCurrency } from "../../shared/utils";
-import { downloadTrialBalanceCsv } from "../../shared/utils/exporters";
-import { loadHtml2Pdf } from "../../shared/utils/loadHtml2Pdf";
+import { downloadTrialBalanceCsv, downloadTrialBalancePdf } from "../../shared/utils/exporters";
 import TrialBalanceDetailRow from "./components/TrialBalanceDetailRow";
 import TrialBalanceFilters from "./components/TrialBalanceFilters";
 import TrialBalanceTable from "./components/TrialBalanceTable";
@@ -16,7 +15,6 @@ const TrialBalancePage = () => {
   const [selectedLineId, setSelectedLineId] = useState<number | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const exportRef = useRef<HTMLDivElement | null>(null);
 
   const {
     formFilters,
@@ -85,7 +83,7 @@ const TrialBalancePage = () => {
     });
   }, [filteredLines]);
 
-  const handleDownloadPdf = useCallback(async () => {
+  const handleDownloadPdf = useCallback(() => {
     if (filteredLines.length === 0) {
       toastService.notify({
         message: "다운로드할 시산표 데이터가 없습니다.",
@@ -93,31 +91,7 @@ const TrialBalancePage = () => {
       });
       return;
     }
-    if (!exportRef.current) {
-      toastService.notify({
-        message: "시산표 영역을 찾을 수 없습니다.",
-        variant: "error",
-      });
-      return;
-    }
-    const html2pdf = await loadHtml2Pdf();
-    if (!html2pdf) {
-      toastService.notify({
-        message: "PDF 도구를 불러오지 못했습니다.",
-        variant: "error",
-      });
-      return;
-    }
-    const filename = `trial-balance-${Date.now()}.pdf`;
-    await html2pdf()
-      .set({
-        margin: 10,
-        filename,
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      })
-      .from(exportRef.current)
-      .save();
+    downloadTrialBalancePdf(filteredLines);
     toastService.notify({
       message: "시산표를 PDF로 저장했습니다.",
       variant: "success",
@@ -125,7 +99,7 @@ const TrialBalancePage = () => {
   }, [filteredLines]);
 
   return (
-    <section className="space-y-6" ref={exportRef}>
+    <section className="space-y-6">
       {/* 요약 박스 */}
       <div className="rounded-2xl border border-slate-100 bg-white p-6">
         <div className="mb-4">
