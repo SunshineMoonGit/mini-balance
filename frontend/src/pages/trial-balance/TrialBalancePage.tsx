@@ -4,7 +4,10 @@ import { useTrialBalance } from "../../features/trialBalance/hooks/useTrialBalan
 import Skeleton from "../../shared/components/Feedback/Skeleton";
 import { toastService } from "../../shared/components/toast/toastService";
 import { formatCurrency } from "../../shared/utils";
-import { downloadTrialBalanceCsv, downloadTrialBalancePdf } from "../../shared/utils/exporters";
+import {
+  downloadTrialBalanceCsv,
+  downloadTrialBalancePdf,
+} from "../../shared/utils/exporters";
 import TrialBalanceDetailRow from "./components/TrialBalanceDetailRow";
 import TrialBalanceFilters from "./components/TrialBalanceFilters";
 import TrialBalanceTable from "./components/TrialBalanceTable";
@@ -181,7 +184,7 @@ const TrialBalancePage = () => {
                     }}
                     disabled={filteredLines.length === 0}
                   >
-                    엑셀 다운로드
+                    CSV 다운로드
                   </button>
                   <button
                     type="button"
