@@ -111,7 +111,7 @@ cd mini-balance
 cd backend
 
 # 가상환경 생성 및 활성화
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 # 패키지 설치
@@ -127,8 +127,8 @@ python3 -m app.seed_accounts
 python3 -m app.seed_sample_data
 ```
 ```
-# 개발 서버 실행 (포트 8000)
-uvicorn app.main:app --reload
+# 개발 서버 실행 (포트 8000) 
+python3 -m uvicorn app.main:app --reload
 ```
 
 ### 2-1. 환경변수 설정
